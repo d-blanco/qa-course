@@ -20,3 +20,49 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python -m pytest -v
+
+  api:
+    name: API tests (Newman)
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Start BookNook
+        working-directory: sample-app
+        run: |
+          npm ci
+          node server.js &
+          timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 1; done'
+      - name: Install Newman
+        working-directory: api-tests
+        run: npm ci
+      - name: Run collection
+        working-directory: api-tests
+        run: npx newman run booknook.postman_collection.json -e booknook-local.postman_environment.json -r cli,json --reporter-json-export results/api.json
+
+  ui:
+    name: UI tests (Cypress)
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Start BookNook
+        working-directory: sample-app
+        run: |
+          npm ci
+          node server.js &
+          timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 1; done'
+      - name: Install Cypress
+        working-directory: ui-tests
+        run: |
+          npm ci
+          npx cypress install
+      - name: Run specs
+        working-directory: ui-tests
+        run: npx cypress run --browser chrome --spec "cypress/e2e/login.cy.js,cypress/e2e/catalog.cy.js,cypress/e2e/accessibility.cy.js"
