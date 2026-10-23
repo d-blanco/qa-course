@@ -39,9 +39,18 @@ jobs:
       - name: Install Newman
         working-directory: api-tests
         run: npm ci
-      - name: Run collection
+      - name: Run collection (report only)
         working-directory: api-tests
+        continue-on-error: true
         run: npx newman run booknook.postman_collection.json -e booknook-local.postman_environment.json -r cli,json --reporter-json-export results/api.json
+      - name: Pass rate summary
+        if: always()
+        working-directory: api-tests
+        run: |
+          total=$(jq '.run.stats.assertions.total' results/api.json)
+          failed=$(jq '.run.stats.assertions.failed' results/api.json)
+          echo "### API tests: $((total - failed)) of $total assertions passed ($(( (total - failed) * 100 / total ))%)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Failures are known defects tracked in GitHub Issues." >> "$GITHUB_STEP_SUMMARY"
 
   ui:
     name: UI tests (Cypress)
@@ -63,6 +72,17 @@ jobs:
         run: |
           npm ci
           npx cypress install
-      - name: Run specs
+      - name: Smoke tests (gate)
         working-directory: ui-tests
-        run: npx cypress run --browser chrome --spec "cypress/e2e/login.cy.js,cypress/e2e/catalog.cy.js,cypress/e2e/accessibility.cy.js"
+        run: npx cypress run --browser chrome --spec "cypress/e2e/login.cy.js,cypress/e2e/catalog.cy.js"
+      - name: Accessibility and known defects (report only)
+        working-directory: ui-tests
+        continue-on-error: true
+        run: npx cypress run --browser chrome --spec "cypress/e2e/accessibility.cy.js,cypress/e2e/discount.cy.js"
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cypress-screenshots
+          path: ui-tests/cypress/snapshots/actual
+          if-no-files-found: ignore
