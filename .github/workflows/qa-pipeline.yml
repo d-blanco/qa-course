@@ -1,0 +1,22 @@
+name: QA Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    name: Unit tests (discount rules)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tdd-discount/python
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -v
