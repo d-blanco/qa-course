@@ -20,12 +20,12 @@ def calculate_discount(subtotal, code, today=None):
     if not code or not code.strip():
         return 0
 
-    discount = CODES.get(code.strip().upper())
+    discount = CODES.get(code.upper())
     if discount is None:
         raise InvalidCodeError("That code isn't valid.")
 
     today = today or date.today()
-    if today > discount["expires"]:
+    if today >= discount["expires"]:
         raise ExpiredCodeError("This code has expired.")
 
     if discount["type"] == "percent":
