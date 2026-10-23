@@ -1,0 +1,12 @@
+{
+  "name": "booknook-api-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "newman run booknook.postman_collection.json -e booknook-local.postman_environment.json",
+    "test:qty": "newman run booknook.postman_collection.json -e booknook-local.postman_environment.json --folder Quantity -d data/qty-boundaries.csv"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2"
+  }
+}

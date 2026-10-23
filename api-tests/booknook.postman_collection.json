@@ -1,0 +1,1377 @@
+{
+	"info": {
+		"name": "BookNook API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Catalog",
+			"item": [
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Browse all books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('Response is JSON', () => {",
+									"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});",
+									"pm.test('Responds in under 500 ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+									"const body = pm.response.json();",
+									"pm.test('TC-2.3 page 1 shows 20 of 30 books', () => {",
+									"  pm.expect(body.total).to.eql(30);",
+									"  pm.expect(body.totalPages).to.eql(2);",
+									"  pm.expect(body.books).to.have.lengthOf(20);",
+									"});",
+									"const book = body.books.find(b => b.stock > 0);",
+									"pm.environment.set('bookId', book.id);",
+									"pm.environment.set('bookPrice', book.price);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Search by partial title",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?q=prag",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "prag"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const body = pm.response.json();",
+									"pm.test('TC-2.1 \"prag\" finds The Pragmatic Programmer', () => {",
+									"  pm.expect(body.total).to.eql(1);",
+									"  pm.expect(body.books[0].title).to.eql('The Pragmatic Programmer');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Page 2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?page=2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const body = pm.response.json();",
+									"pm.test('TC-2.3 page 2 shows the last 10 books', () => {",
+									"  pm.expect(body.page).to.eql(2);",
+									"  pm.expect(body.books).to.have.lengthOf(10);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Search with no matches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books?q=zzz",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "zzz"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const body = pm.response.json();",
+									"pm.test('TC-2.4 no matches returns an empty list', () => {",
+									"  pm.expect(body.total).to.eql(0);",
+									"  pm.expect(body.books).to.be.empty;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Book not found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books/999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books",
+								"999"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 404', () => pm.response.to.have.status(404));",
+									"pm.test('Error code is E_NOT_FOUND', () => pm.expect(pm.response.json().err).to.eql('E_NOT_FOUND'));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Book details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/books/{{bookId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"books",
+								"{{bookId}}"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('Returns the requested book', () => {",
+									"  pm.expect(pm.response.json().id).to.eql(pm.environment.get('bookId'));",
+									"});",
+									"const bookSchema = {",
+									"  type: 'object',",
+									"  required: ['id', 'title', 'author', 'category', 'price', 'stock', 'rating', 'description'],",
+									"  properties: {",
+									"    id: { type: 'integer' }, title: { type: 'string' }, author: { type: 'string' }, category: { type: 'string' },",
+									"    price: { type: 'integer', minimum: 0 }, stock: { type: 'integer', minimum: 0 },",
+									"    rating: { type: 'number', minimum: 0, maximum: 5 }, description: { type: 'string' }",
+									"  }",
+									"};",
+									"pm.test('Matches the book contract', () => pm.response.to.have.jsonSchema(bookSchema));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login – valid",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('TC-1.1 returns the user and a session cookie', () => {",
+									"  pm.expect(pm.response.json().email).to.eql(pm.environment.get('userEmail'));",
+									"  pm.expect(pm.cookies.has('session')).to.be.true;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login – wrong password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"WrongPass1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 401', () => pm.response.to.have.status(401));",
+									"pm.test('TC-1.2 generic message', () => pm.expect(pm.response.json().message).to.eql('Email or password is incorrect.'));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login – unknown email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nobody@booknook.test\",\n  \"password\": \"{{userPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 401', () => pm.response.to.have.status(401));",
+									"pm.test('TC-1.2 generic message', () => pm.expect(pm.response.json().message).to.eql('Email or password is incorrect.'));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"new.user@booknook.test\",\n  \"password\": \"Passw0rd!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Register endpoint exists (documented)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add book to cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookId\": {{bookId}},\n  \"qty\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 201', () => pm.response.to.have.status(201));",
+									"const cart = pm.response.json();",
+									"const price = pm.environment.get('bookPrice');",
+									"pm.test('Line total and subtotal are price x 2', () => {",
+									"  pm.expect(cart.items[0].lineTotal).to.eql(price * 2);",
+									"  pm.expect(cart.subtotal).to.eql(price * 2);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('Cart was kept between requests', () => {",
+									"  pm.expect(pm.response.json().items).to.have.lengthOf(1);",
+									"});",
+									"const cartSchema = {",
+									"  type: 'object',",
+									"  required: ['items', 'discounts', 'subtotal', 'discount', 'shipping', 'total'],",
+									"  properties: {",
+									"    items: { type: 'array', items: { type: 'object', required: ['bookId', 'title', 'price', 'qty', 'lineTotal'],",
+									"      properties: { bookId: { type: 'integer' }, title: { type: 'string' }, price: { type: 'integer' }, qty: { type: 'integer' }, lineTotal: { type: 'integer' } } } },",
+									"    discounts: { type: 'array', items: { type: 'string' } },",
+									"    subtotal: { type: 'integer' }, discount: { type: 'integer' }, shipping: { type: 'integer' }, total: { type: 'integer' }",
+									"  }",
+									"};",
+									"pm.test('Matches the cart contract', () => pm.response.to.have.jsonSchema(cartSchema));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Remove book",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/{{bookId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"{{bookId}}"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const cart = pm.response.json();",
+									"pm.test('Cart is empty and totals are zero', () => {",
+									"  pm.expect(cart.items).to.be.empty;",
+									"  pm.expect(cart.subtotal).to.eql(0);",
+									"  pm.expect(cart.total).to.eql(0);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add book – non-numeric qty",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 1, \"qty\": \"abc\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const cartSchema = {",
+									"  type: 'object',",
+									"  required: ['items', 'discounts', 'subtotal', 'discount', 'shipping', 'total'],",
+									"  properties: {",
+									"    items: { type: 'array', items: { type: 'object', required: ['bookId', 'title', 'price', 'qty', 'lineTotal'],",
+									"      properties: { bookId: { type: 'integer' }, title: { type: 'string' }, price: { type: 'integer' }, qty: { type: 'integer' }, lineTotal: { type: 'integer' } } } },",
+									"    discounts: { type: 'array', items: { type: 'string' } },",
+									"    subtotal: { type: 'integer' }, discount: { type: 'integer' }, shipping: { type: 'integer' }, total: { type: 'integer' }",
+									"  }",
+									"};",
+									"pm.test('Matches the cart contract', () => pm.response.to.have.jsonSchema(cartSchema));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Shipping at exactly $35",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 21 }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 201', () => pm.response.to.have.status(201));",
+									"pm.test('F6.3 a $35.00 order pays $4.99 shipping', () => {",
+									"  pm.expect(pm.response.json().shipping).to.eql(499);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add out-of-stock book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 4 }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('F3.2 out-of-stock book is rejected', () => pm.response.to.have.status(400));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Discounts",
+			"item": [
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add 2 x Pragmatic Programmer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 1, \"qty\": 2 }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 201', () => pm.response.to.have.status(201));",
+									"pm.test('Subtotal is 7998', () => pm.expect(pm.response.json().subtotal).to.eql(7998));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply SAVE15",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"SAVE15\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const cart = pm.response.json();",
+									"pm.test('TC-3.1 15% off $79.98 is $12.00; total $67.98', () => {",
+									"  pm.expect(cart.discount).to.eql(1200);",
+									"  pm.expect(cart.total).to.eql(6798);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply a second code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"FIVEOFF\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const cart = pm.response.json();",
+									"pm.test('TC-3.4 FIVEOFF replaces SAVE15', () => {",
+									"  pm.expect(cart.discounts).to.eql(['FIVEOFF']);",
+									"  pm.expect(cart.discount).to.eql(500);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Remove discount",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"pm.test('No discount applied', () => pm.expect(pm.response.json().discounts).to.be.empty);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply lowercase code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"save15\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('TC-3.2 \"save15\" is accepted', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply invalid code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"BOGUS\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 400', () => pm.response.to.have.status(400));",
+									"pm.test(\"TC-3.3 message is 'That code isn't valid.'\", () => {",
+									"  pm.expect(pm.response.json().message).to.eql(\"That code isn't valid.\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply expired code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"SUMMER20\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 400', () => pm.response.to.have.status(400));",
+									"pm.test('TC-3.3 message is \"This code has expired.\"', () => {",
+									"  pm.expect(pm.response.json().message).to.eql('This code has expired.');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Bookmark",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 28 }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 201', () => pm.response.to.have.status(201));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Apply FIVEOFF to $3.00 cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart/discount",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"discount"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"code\": \"FIVEOFF\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"const cart = pm.response.json();",
+									"pm.test('TC-3.5 discount is capped at the $3.00 subtotal', () => {",
+									"  pm.expect(cart.discount).to.eql(300);",
+									"  pm.expect(cart.total).to.eql(499);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Quantity",
+			"item": [
+				{
+					"name": "Reset data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add book with qty",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cart",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"bookId\": 1, \"qty\": {{qty}} }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const qty = pm.variables.get('qty');",
+									"const expected = Number(pm.variables.get('expectedStatus'));",
+									"pm.test(`qty ${qty} returns ${expected}`, () => pm.response.to.have.status(expected));"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Contract: every error response is JSON with a code and a readable message",
+					"if (pm.response.code >= 400) {",
+					"  const errorSchema = {",
+					"    type: 'object',",
+					"    required: ['err', 'message'],",
+					"    properties: { err: { type: 'string' }, message: { type: 'string' } }",
+					"  };",
+					"  pm.test('Error response follows the error contract', () => {",
+					"    pm.response.to.have.jsonSchema(errorSchema);",
+					"  });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "qty",
+			"value": "1"
+		},
+		{
+			"key": "expectedStatus",
+			"value": "201"
+		}
+	]
+}

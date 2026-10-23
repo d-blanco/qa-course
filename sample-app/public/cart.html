@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookNook – Cart</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Your Cart</h1>
+    <div id="cart"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    function renderItems(cart) {
+      const el = document.getElementById('items');
+      if (cart.items.length === 0) {
+        el.innerHTML = '<tr><td colspan="5" class="empty">Your cart is empty.</td></tr>';
+        return;
+      }
+      el.innerHTML = cart.items.map(i => `
+        <tr>
+          <td>${i.title}</td>
+          <td>${money(i.price)}</td>
+          <td><input type="number" min="1" max="10" value="${i.qty}" onchange="updateQty(${i.bookId}, this.value)"></td>
+          <td>${money(i.lineTotal)}</td>
+          <td><button class="secondary" onclick="removeItem(${i.bookId})">Remove</button></td>
+        </tr>`).join('');
+    }
+
+    function renderSummary(cart) {
+      document.getElementById('subtotal').textContent = money(cart.subtotal);
+      document.getElementById('discount').textContent = cart.discount ? '-' + money(cart.discount) : money(0);
+      document.getElementById('codes').textContent = cart.discounts.length ? `(${cart.discounts.join(', ')})` : '';
+      document.getElementById('shipping').textContent = cart.shipping ? money(cart.shipping) : 'FREE';
+      document.getElementById('total').textContent = money(cart.total);
+      document.getElementById('remove-code').hidden = cart.discounts.length === 0;
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.className = 'message ' + type;
+      msg.textContent = text;
+    }
+
+    async function updateQty(bookId, qty) {
+      try {
+        const cart = await api('PATCH', `/api/cart/${bookId}`, { qty });
+        renderItems(cart);
+        renderSummary(cart);
+        showMessage('', '');
+      } catch (e) {
+        showMessage(e.message, 'error');
+      }
+      refreshCartCount();
+    }
+
+    async function removeItem(bookId) {
+      const cart = await api('DELETE', `/api/cart/${bookId}`);
+      renderItems(cart);
+      refreshCartCount();
+    }
+
+    async function applyCode() {
+      const code = document.getElementById('code').value;
+      try {
+        const cart = await api('POST', '/api/cart/discount', { code });
+        renderSummary(cart);
+        showMessage(`Code ${code} applied.`, 'success');
+      } catch (e) {
+        showMessage(e.message, 'error');
+      }
+    }
+
+    async function removeCode() {
+      const cart = await api('DELETE', '/api/cart/discount');
+      renderSummary(cart);
+      showMessage('Discount removed.', 'success');
+    }
+
+    async function loadCart() {
+      document.getElementById('cart').innerHTML = `
+        <table>
+          <thead><tr><th>Book</th><th>Price</th><th>Qty</th><th>Line Total</th><th></th></tr></thead>
+          <tbody id="items"></tbody>
+        </table>
+        <div class="summary">
+          <div><span>Subtotal</span><span id="subtotal"></span></div>
+          <div><span>Discount <span id="codes" class="muted"></span></span><span id="discount"></span></div>
+          <div><span>Shipping</span><span id="shipping"></span></div>
+          <div class="total"><span>Total</span><span id="total"></span></div>
+          <p class="muted">Tax is calculated at checkout.</p>
+          <div class="discount-form">
+            <input id="code" placeholder="Discount code">
+            <button onclick="applyCode()">Apply</button>
+          </div>
+          <button id="remove-code" class="secondary" onclick="removeCode()" hidden>Remove discount</button>
+          <div id="message" class="message"></div>
+        </div>`;
+      const cart = await api('GET', '/api/cart');
+      renderItems(cart);
+      renderSummary(cart);
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

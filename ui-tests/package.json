@@ -1,0 +1,16 @@
+{
+  "name": "booknook-ui-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "flaky": "cypress run --browser chrome --config specPattern=cypress/flaky/*.cy.js"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0",
+    "cypress": "^15.21.1",
+    "cypress-axe": "^1.7.0",
+    "cypress-visual-regression": "^6.0.1"
+  }
+}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookNook – Log In</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Log In</h1>
+    <form id="login-form" class="card login">
+      <label>Email <input id="email" type="email" autocomplete="username"></label>
+      <label>Password <input id="password" type="password" autocomplete="current-password"></label>
+      <button id="login-btn" type="submit">Log in</button>
+      <div id="message" class="message"></div>
+    </form>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    document.getElementById('login-form').onsubmit = async e => {
+      e.preventDefault();
+      const msg = document.getElementById('message');
+      try {
+        await api('POST', '/api/auth/login', {
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        });
+        location.href = '/';
+      } catch (err) {
+        msg.className = 'message error';
+        msg.textContent = err.message;
+      }
+    };
+  </script>
+</body>
+</html>

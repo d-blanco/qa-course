@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookNook – Book Details</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <p><a href="/">&larr; Back to catalog</a></p>
+    <div id="book" class="card"></div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    async function loadBook() {
+      const id = new URLSearchParams(location.search).get('id');
+      const el = document.getElementById('book');
+      try {
+        const b = await api('GET', `/api/books/${id}`);
+        const inStock = b.stock > 0;
+        el.innerHTML = `
+          <img class="cover" src="/covers/cover.svg">
+          <h1>${b.title}</h1>
+          <span class="muted">by ${b.author} &middot; ${b.category}</span>
+          <span>Rating: ${b.rating} / 5</span>
+          <p>${b.description}</p>
+          <span class="price">${money(b.price)}</span>
+          ${inStock ? '' : '<span class="oos">Out of Stock</span>'}
+          <div>
+            <label>Qty <input id="qty" type="number" min="1" max="10" value="1" ${inStock ? '' : 'disabled'}></label>
+            <button id="add" ${inStock ? '' : 'disabled'}>Add to Cart</button>
+          </div>
+          <div id="message" class="message"></div>`;
+        document.getElementById('add').onclick = async () => {
+          const msg = document.getElementById('message');
+          try {
+            await addToCart(b.id, document.getElementById('qty').value);
+            msg.className = 'message success';
+            msg.textContent = 'Added to cart.';
+          } catch (e) {
+            msg.className = 'message error';
+            msg.textContent = e.message;
+          }
+        };
+      } catch (e) {
+        el.innerHTML = '<p class="empty">Book not found.</p>';
+      }
+    }
+    loadBook();
+  </script>
+</body>
+</html>

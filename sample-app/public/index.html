@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookNook – Catalog</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Catalog</h1>
+    <div class="toolbar">
+      <input id="search" data-cy="search-input" type="search" placeholder="Search title or author">
+      <select id="category" data-cy="category-filter"><option value="">All categories</option></select>
+      <button id="search-btn" data-cy="search-button">Search</button>
+    </div>
+    <div id="results" data-cy="results" class="grid"></div>
+    <div class="pager">
+      <button id="prev" data-cy="prev-page" class="secondary">Previous</button>
+      <span id="page-info" data-cy="page-info"></span>
+      <button id="next" data-cy="next-page" class="secondary">Next</button>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    let page = 1;
+
+    async function loadCategories() {
+      const categories = await api('GET', '/api/categories');
+      const select = document.getElementById('category');
+      for (const c of categories) select.insertAdjacentHTML('beforeend', `<option>${c}</option>`);
+    }
+
+    async function loadBooks() {
+      const q = encodeURIComponent(document.getElementById('search').value);
+      const category = encodeURIComponent(document.getElementById('category').value);
+      const data = await api('GET', `/api/books?q=${q}&category=${category}&page=${page}`);
+
+      const results = document.getElementById('results');
+      results.innerHTML = data.books.length ? '' : '<p class="empty" data-cy="no-results">No books found.</p>';
+      for (const b of data.books) {
+        results.insertAdjacentHTML('beforeend', `
+          <div class="card" data-cy="book-card">
+            <h3><a href="/book.html?id=${b.id}">${b.title}</a></h3>
+            <span class="muted">${b.author}</span>
+            <span class="price">${money(b.price)}</span>
+            ${b.stock === 0 ? '<span class="oos">Out of Stock</span>' : ''}
+            <button data-cy="add-to-cart" onclick="addToCart(${b.id}, 1)">Add to Cart</button>
+          </div>`);
+      }
+
+      document.getElementById('page-info').textContent = `Page ${data.page} of ${data.totalPages}`;
+      document.getElementById('prev').disabled = data.page <= 1;
+      document.getElementById('next').disabled = data.page >= data.totalPages;
+    }
+
+    document.getElementById('search-btn').onclick = () => { page = 1; loadBooks(); };
+    document.getElementById('search').onkeydown = e => { if (e.key === 'Enter') { page = 1; loadBooks(); } };
+    document.getElementById('category').onchange = () => { page = 1; loadBooks(); };
+    document.getElementById('prev').onclick = () => { page--; loadBooks(); };
+    document.getElementById('next').onclick = () => { page++; loadBooks(); };
+
+    loadCategories();
+    loadBooks();
+  </script>
+</body>
+</html>

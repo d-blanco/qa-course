@@ -1,0 +1,13 @@
+{
+  "name": "booknook",
+  "version": "1.0.0",
+  "description": "BookNook sample bookstore used in the Quality Assurance Introduction labs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:slow": "node server.js --latency 1500"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

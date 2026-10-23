@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; color: #222; background: #faf8f4; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #3b2f2f; color: #fff; }
+header a { color: #fff; text-decoration: none; margin-left: 16px; }
+header .logo { font-size: 1.4rem; font-weight: bold; margin-left: 0; }
+main { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar input, .toolbar select { padding: 8px; font-size: 1rem; }
+button { padding: 8px 14px; font-size: 0.95rem; border: 0; border-radius: 4px; background: #8a5a44; color: #fff; cursor: pointer; }
+button:disabled { background: #bbb; cursor: not-allowed; }
+button.secondary { background: #ddd; color: #222; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.card { background: #fff; border: 1px solid #e5e0d8; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.card h3 { margin: 0; font-size: 1.05rem; }
+.card h3 a { color: inherit; }
+.muted { color: #666; font-size: 0.9rem; }
+.price { font-weight: bold; }
+.oos { color: #f08080; font-weight: bold; font-size: 0.85rem; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 20px; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+td input[type=number] { width: 64px; padding: 4px; }
+.summary { margin-top: 20px; max-width: 360px; margin-left: auto; background: #fff; border: 1px solid #e5e0d8; border-radius: 6px; padding: 14px; }
+.summary div { display: flex; justify-content: space-between; padding: 4px 0; }
+.summary .total { font-weight: bold; border-top: 1px solid #ddd; margin-top: 6px; padding-top: 8px; }
+.discount-form { display: flex; gap: 8px; margin-top: 12px; }
+.discount-form input { flex: 1; padding: 8px; }
+.message { margin-top: 8px; min-height: 1.2em; }
+.message.error { color: #b00020; }
+.message.success { color: #1b7f3a; }
+.empty { padding: 40px; text-align: center; color: #666; }
+#account { margin-left: 16px; }
+#user-email { opacity: 0.85; }
+.login { max-width: 360px; }
+.login label { display: flex; flex-direction: column; gap: 4px; }
+.login input { padding: 8px; font-size: 1rem; }
+.cover { width: 120px; border-radius: 4px; }
